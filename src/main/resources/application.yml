@@ -1,0 +1,90 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: api-gateway
+  
+  cloud:
+    gateway:
+      # Global CORS configuration
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            exposedHeaders:
+              - Authorization
+            maxAge: 3600
+      
+      # Default filters for all routes
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      
+      # Route definitions
+      routes:
+        # Auth Service (.NET - Port 5003)
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:http://localhost:5003}
+          predicates:
+            - Path=/api/auth/**
+        
+        # Product Service (Node.js - Port 5001)
+        - id: product-service
+          uri: ${PRODUCT_SERVICE_URL:http://localhost:5001}
+          predicates:
+            - Path=/api/products/**
+        
+        # Inventory Service (Node.js - Port 5002)
+        - id: inventory-service
+          uri: ${INVENTORY_SERVICE_URL:http://localhost:5002}
+          predicates:
+            - Path=/api/inventory/**
+        
+        # User Service (Node.js - Port 5004)
+        - id: user-service
+          uri: ${USER_SERVICE_URL:http://localhost:5004}
+          predicates:
+            - Path=/api/users/**
+        
+        # Order Service (Spring Boot - Port 5005)
+        - id: order-service
+          uri: ${ORDER_SERVICE_URL:http://localhost:5005}
+          predicates:
+            - Path=/api/orders/**
+        
+        # Checkout Service (Spring Boot - Port 5006)
+        - id: checkout-service
+          uri: ${CHECKOUT_SERVICE_URL:http://localhost:5006}
+          predicates:
+            - Path=/api/checkout/**
+        
+        # Payment Service (Spring Boot - Port 5007)
+        - id: payment-service
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:5007}
+          predicates:
+            - Path=/api/payments/**
+
+# Actuator endpoints for health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: INFO
